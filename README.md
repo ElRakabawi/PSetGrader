@@ -3,19 +3,36 @@ An open source grader for problem sets / contests that don't have an online grad
 
 ## Storage
 Storing the actual problem set will consist of a directory structure with the following layout:
+
 ```
 .
-└── Problem\ Set\ X
-    ├── Problem\ A
-    │   ├── Sub\ Task\ 1
+└── Problem Set X
+    ├── config.txt
+    |
+    ├── Problem A
+    │   ├── config.txt
+    |   |
+    │   ├── Sub Task 1
     │   │   ├── input
     │   │   │   ├── in1.txt
-    │   │   │   └── in2.txt
+    |   |   |      ....
+    │   │   │   └── in[n].txt
     │   │   └── output
     │   │       ├── out1.txt
-    │   │       └── out2.txt
-    │   ├── Sub\ Task\ 2
-    │   └── config.txt
-    ├── Problem\ B
-    └── config.txt
+    |   |          ....
+    │   │       └── out[n].txt
+    |   |
+    |     ....
+    |   |
+    |   |
+    │   ├── Sub Task [n]
+    |   |   ....
+    |   |
+    |
+       .... 
+    |
+    ├── Problem [n]
+    |   ....
+    |
+    
 ```
