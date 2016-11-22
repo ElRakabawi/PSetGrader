@@ -3,7 +3,7 @@ An open source grader for problem sets / contests that don't have an online grad
 
 ## Storage
 Storing the actual problem set will consist of a directory structure with the following layout:
-
+```
 .
 └── Problem\ Set\ X
     ├── Problem\ A
@@ -18,3 +18,4 @@ Storing the actual problem set will consist of a directory structure with the fo
     │   └── config.txt
     ├── Problem\ B
     └── config.txt
+```
