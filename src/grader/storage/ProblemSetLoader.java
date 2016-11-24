@@ -15,12 +15,26 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
+ *
+ * A class with a set of static methods to load the test
+ * data models from their respective directories.
+ *
  * Created by Basim on 22/11/2016.
  */
 public class ProblemSetLoader {
 
+    // The name of the config file within each directory
     private static final String MAIN_CONFIG = "config.json";
 
+    /**
+     *
+     * Read a JSON object from the given filename and close the
+     * JSONReader object used.
+     *
+     * @param fileName The file to load from
+     * @return The parsed JSONObject for the file given
+     * @throws FileNotFoundException If the file is invalid
+     */
     private static JSONDocument getJSONObject(String fileName) throws FileNotFoundException {
         JSONReader reader = new JSONStreamReaderImpl(new FileReader(fileName));
         JSONDocument doc = reader.build();
@@ -29,6 +43,14 @@ public class ProblemSetLoader {
         return doc;
     }
 
+    /**
+     *
+     * Load a sub-task from the specified directory
+     *
+     * @param dirName The directory to load from
+     * @return The SubTaskModel for the directory
+     * @throws FileNotFoundException If the config file wasn't found
+     */
     public static SubTaskModel loadSubTask(String dirName) throws FileNotFoundException {
 
         SubTaskModel subTask = new SubTaskModel();
@@ -39,6 +61,9 @@ public class ProblemSetLoader {
         File inputDir = new File(dirName + File.separator + "input");
         File outputDir = new File(dirName + File.separator + "output");
 
+        if (!inputDir.exists() || !outputDir.exists())
+            throw new FileNotFoundException("Test data directories not present");
+
         FileFilter txtFilter = new FileFilter() {
             @Override
             public boolean accept(File pathname) {
@@ -46,6 +71,8 @@ public class ProblemSetLoader {
             }
         };
 
+        // Load all files, filtering currently allows only text files to prevent
+        // config files getting in the way
         for (File input: inputDir.listFiles(txtFilter)) subTask.inputFiles.add(input.getName());
         for (File output: outputDir.listFiles(txtFilter)) subTask.outputFiles.add(output.getName());
 
@@ -55,16 +82,25 @@ public class ProblemSetLoader {
         return subTask;
     }
 
+    /**
+     *  Load a problem from the given directory
+     *
+     * @param dirName
+     * @return
+     * @throws FileNotFoundException
+     */
     public static ProblemModel loadProblem(String dirName) throws FileNotFoundException{
 
         ProblemModel problem = new ProblemModel();
 
         JSONDocument configDoc = getJSONObject(dirName + File.separator + MAIN_CONFIG);
 
+        // Extract properties from the config file
         problem.name = configDoc.getString("name");
         problem.description = configDoc.getString("description");
         problem.subTasks = new ArrayList<SubTaskModel>();
 
+        // Iterate over each sub-task specified and load it's sub-directory
         for (Object object: configDoc.getList("sub-tasks")) {
             String subTaskName = (String)object;
             problem.subTasks.add(loadSubTask(dirName + File.separator + subTaskName));
@@ -73,16 +109,25 @@ public class ProblemSetLoader {
         return problem;
     }
 
+    /**
+     * Load the entire problem set from a given directory
+     *
+     * @param dirName
+     * @return
+     * @throws FileNotFoundException
+     */
     public static ProblemSetModel loadProblemSet(String dirName) throws FileNotFoundException {
 
         ProblemSetModel problemSet = new ProblemSetModel();
 
         JSONDocument configDoc = getJSONObject(dirName + File.separator + MAIN_CONFIG);
 
+        // Extract config properties
         problemSet.name = configDoc.getString("name");
         problemSet.description = configDoc.getString("description");
         problemSet.problems = new ArrayList<ProblemModel>();
 
+        // Iterate over each specified problem and parse the problems from their own directories
         for (Object object: configDoc.getList("problems")) {
             String problemName = (String)object;
             problemSet.problems.add(loadProblem(dirName + File.separator + problemName));
