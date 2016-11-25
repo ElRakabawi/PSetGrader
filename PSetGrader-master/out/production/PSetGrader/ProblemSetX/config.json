@@ -1,8 +1,0 @@
-{
-    "name": "Problem Set X",
-    "description": "Some problem set I am using as an example, both problems compute the factorial function",
-    "problems": [
-        "Problem A",
-        "Problem B"
-    ]
-}

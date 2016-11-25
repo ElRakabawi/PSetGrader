@@ -1,17 +1,16 @@
-package grader.checker;
+package grader;
 
 import java.io.*;
 
 /**
  * Created by ElBatanony on 24-Nov-16.
  */
-
-public class checker {
+public class Checker {
 
     private int compile( String fileName ) throws IOException, InterruptedException {
 
         String cppFile = fileName+".cpp"; // for c++ code
-        String exeFile = fileName+".exe"; // the exe file
+        String exeFile = "assets/" + fileName + ".exe"; // the exe file
 
         Runtime rt = Runtime.getRuntime();
         String compileCommand = "g++ " + cppFile + " -o " + exeFile;
@@ -28,7 +27,7 @@ public class checker {
 
     private int execute(String fileName) throws IOException, InterruptedException {
 
-        String exeFile = fileName + ".exe"; // the exe file
+        String exeFile = "assets/" + fileName + ".exe"; // the exe file
         Runtime rt = Runtime.getRuntime();
 
         int timeLimit = 2000; // milliseconds get from config of problem
@@ -107,7 +106,7 @@ public class checker {
 
     public static void main(String []args) throws IOException, InterruptedException {
 
-        checker ch = new checker(); // gets instance of checker class
+        Checker ch = new Checker(); // gets instance of checker class
 
         // using sync for the wait command
         synchronized ( ch ) {
@@ -116,8 +115,5 @@ public class checker {
 
         System.out.println("Done!"); // YAY :D
     }
-
-
-
 
 }
