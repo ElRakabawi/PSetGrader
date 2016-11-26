@@ -9,4 +9,5 @@ public class ProblemSetModel {
     public String name;
     public String description;
     public List<ProblemModel> problems;
+    public List<String> authors;
 }

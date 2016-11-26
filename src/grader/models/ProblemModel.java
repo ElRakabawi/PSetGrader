@@ -9,4 +9,5 @@ public class ProblemModel {
     public String name;
     public String description;
     public List<SubTaskModel> subTasks;
+    public List<String> authors;
 }
