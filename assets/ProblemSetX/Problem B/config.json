@@ -1,7 +1,8 @@
 {
-    "name": "Problem B",
-    "description": "Another problem",
-    "sub-tasks": [
-        "Sub Task 1"
-    ]
+  "name": "Problem B",
+  "description": "Another problem",
+  "authors": [ "Some Guy" ],
+  "sub-tasks": [
+    "Sub Task 1"
+  ]
 }
