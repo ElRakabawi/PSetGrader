@@ -1,0 +1,10 @@
+{
+  "name": "Sub Task 1",
+  "description": "Some sub task of a problem",
+  "authors": [
+    "Basim",
+    "Ahmed"
+  ],
+  "time-limit": "1000",
+  "memory-limit": "128"
+}

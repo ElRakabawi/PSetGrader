@@ -1,7 +1,10 @@
 {
   "name": "Problem Set X",
   "description": "Some problem set I am using as an example, both problems compute the factorial function",
-  "authors": ["Basim", "Ahmed"],
+  "authors": [
+    "Basim",
+    "Ahmed"
+  ],
   "problems": [
     "Problem A",
     "Problem B"

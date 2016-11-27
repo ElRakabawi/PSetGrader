@@ -54,9 +54,13 @@ public class ProblemSetLoader {
     public static SubTaskModel loadSubTask(String dirName) throws FileNotFoundException {
 
         SubTaskModel subTask = new SubTaskModel();
+        JSONDocument configDoc = getJSONObject(dirName + File.separator + MAIN_CONFIG);
 
-        subTask.inputFiles = new ArrayList<String>();
-        subTask.outputFiles = new ArrayList<String>();
+        subTask.memoryLimit = configDoc.getNumber("memory-limit").intValue();
+        subTask.timeLimit = configDoc.getNumber("time-limit").intValue();
+
+        subTask.inputFiles = new ArrayList<>();
+        subTask.outputFiles = new ArrayList<>();
 
         File inputDir = new File(dirName + File.separator + "input");
         File outputDir = new File(dirName + File.separator + "output");
@@ -64,15 +68,9 @@ public class ProblemSetLoader {
         if (!inputDir.exists() || !outputDir.exists())
             throw new FileNotFoundException("Test data directories not present");
 
-        FileFilter txtFilter = new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return pathname.getName().endsWith(".txt");
-            }
-        };
+        FileFilter txtFilter = pathname -> pathname.getName().endsWith(".txt");
 
-        // Load all files, filtering currently allows only text files to prevent
-        // config files getting in the way
+        // Load all files, filtering currently allows only text files to prevent config files getting in the way
         for (File input: inputDir.listFiles(txtFilter)) subTask.inputFiles.add(input.getName());
         for (File output: outputDir.listFiles(txtFilter)) subTask.outputFiles.add(output.getName());
 
@@ -92,13 +90,16 @@ public class ProblemSetLoader {
     public static ProblemModel loadProblem(String dirName) throws FileNotFoundException{
 
         ProblemModel problem = new ProblemModel();
-
         JSONDocument configDoc = getJSONObject(dirName + File.separator + MAIN_CONFIG);
 
         // Extract properties from the config file
         problem.name = configDoc.getString("name");
         problem.description = configDoc.getString("description");
-        problem.subTasks = new ArrayList<SubTaskModel>();
+
+        problem.authors = new ArrayList<>();
+        problem.subTasks = new ArrayList<>();
+
+        for (Object author: configDoc.getList("authors")) problem.authors.add((String) author);
 
         // Iterate over each sub-task specified and load it's sub-directory
         for (Object object: configDoc.getList("sub-tasks")) {
@@ -125,7 +126,10 @@ public class ProblemSetLoader {
         // Extract config properties
         problemSet.name = configDoc.getString("name");
         problemSet.description = configDoc.getString("description");
-        problemSet.problems = new ArrayList<ProblemModel>();
+        problemSet.problems = new ArrayList<>();
+        problemSet.authors = new ArrayList<>();
+
+        for (Object author: configDoc.getList("authors")) problemSet.authors.add((String) author);
 
         // Iterate over each specified problem and parse the problems from their own directories
         for (Object object: configDoc.getList("problems")) {
