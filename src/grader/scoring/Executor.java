@@ -16,7 +16,7 @@ public class Executor {
      * sub-task specified
      *
      * @param subTask The sub-task description
-     * @param programFile The file containing the executable to run
+     * @param exeFile The file containing the executable to run
      * @return The result: TLE, WA, AC or MLE
      */
     private static ExecutionResult gradeSubTask(SubTaskModel subTask, String exeFile) {
