@@ -1,5 +1,7 @@
 package grader;
 
+import grader.scoring.ExecutionResult;
+
 import java.io.*;
 
 /**
@@ -7,7 +9,7 @@ import java.io.*;
  */
 public class Checker {
 
-    private int compile( String fileName ) throws IOException, InterruptedException {
+    public int compile( String fileName ) throws IOException, InterruptedException {
 
         String cppFile = fileName+".cpp"; // for c++ code
         String exeFile = "assets/" + fileName + ".exe"; // the exe file
@@ -25,9 +27,10 @@ public class Checker {
         if (pr.isAlive()) pr.destroy();
     }
 
-    private int execute(String fileName) throws IOException, InterruptedException {
+    public ExecutionResult execute(String exeFile) throws IOException, InterruptedException {
 
-        String exeFile = "assets/" + fileName + ".exe"; // the exe file
+        //String exeFile = "assets/" + fileName + ".exe"; // the exe file
+        //exeFile = "assets/" + exeFile + ".exe";
         Runtime rt = Runtime.getRuntime();
 
         int timeLimit = 2000; // milliseconds get from config of problem
@@ -42,21 +45,24 @@ public class Checker {
 
         if ( exValue == -1 || exValue == 1 ) {
             pr("Time Limit Exceeded!");
-            return 1; // return 1 so we do not compare output
+            return ExecutionResult.TLE; // return 1 so we do not compare output
         } //else pr( "exit value : " + Integer.toString( exValue ) );
 
-        return  0;
+        return ExecutionResult.None;
     }
 
-    private void compare(String fileName) throws IOException {
+    public ExecutionResult compare(String outputFile, String judgeOutputFile) throws IOException {
 
         FileInputStream in = null;
         FileInputStream jin = null;
 
         try {
 
-            in = new FileInputStream("output.txt");
-            jin = new FileInputStream("judgeOut.txt");
+            // for testing
+            outputFile = "output.txt"; judgeOutputFile = "judgeOut.txt";
+
+            in = new FileInputStream(outputFile);
+            jin = new FileInputStream(judgeOutputFile);
             BufferedReader br = new BufferedReader( new InputStreamReader( in ) );
             BufferedReader brj = new BufferedReader( new InputStreamReader( jin ) );
 
@@ -64,17 +70,17 @@ public class Checker {
             while ( ( l = brj.readLine() ) != null ) {
 
                 l2 = br.readLine();
-                if ( l2 == null ) { pr("Wrong Answer!"); return; }
+                if ( l2 == null ) { pr("Wrong Answer!"); return ExecutionResult.WA; }
 
                 l = l.trim(); l2 = l2.trim();
 
-                if ( !l.equals(l2) ) { pr("Wrong Answer!"); return; }
+                if ( !l.equals(l2) ) { pr("Wrong Answer!"); return ExecutionResult.WA; }
 
             }
 
-            if ( ( l2 = br.readLine() ) != null ) { pr("Wrong Answer!"); return; }
+            if ( ( l2 = br.readLine() ) != null ) { pr("Wrong Answer!"); return ExecutionResult.WA; }
 
-            pr("Accepted!");
+            pr("Accepted!"); return ExecutionResult.AC;
 
         }finally {
             if (in != null) in.close();
@@ -82,20 +88,15 @@ public class Checker {
         }
     }
 
-    private boolean filler(int x) {
-        if (x == 10 || x == 32 || x == 13) return true; // is it a space or a new line
-        return false;
-    }
-
-    private static void pr(String x) {
+    public static void pr(String x) {
         System.out.println(x);
     } // for convenience :D
 
     private void caller() throws IOException, InterruptedException {
         String fileName = "testCode"; // get code name from user interface
         if ( compile(fileName) == 0 ) {
-            if (execute(fileName) != 1) // did not give us a TLE (TLE = 1)
-                compare(fileName); // check output bit by bit
+            if (execute(fileName) == ExecutionResult.None) // did not give us a TLE (TLE = 1)
+                compare("",""); // check output bit by bit
         } else {
             pr("Compilation Error!");
         }
