@@ -7,5 +7,6 @@ public enum ExecutionResult {
     AC,
     WA,
     TLE,
-    MLE
+    MLE,
+    None
 }
