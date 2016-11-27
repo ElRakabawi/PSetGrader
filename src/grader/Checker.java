@@ -57,36 +57,34 @@ public class Checker {
 
             in = new FileInputStream("output.txt");
             jin = new FileInputStream("judgeOut.txt");
+            BufferedReader br = new BufferedReader( new InputStreamReader( in ) );
+            BufferedReader brj = new BufferedReader( new InputStreamReader( jin ) );
 
-            int c,c2;
-            while ( (c = in.read()) != -1) {
+            String l,l2;
+            while ( ( l = brj.readLine() ) != null ) {
 
-                c2 = jin.read();
+                l2 = br.readLine();
+                if ( l2 == null ) { pr("Wrong Answer!"); return; }
 
-                if (c2 == -1) {
-                    System.out.println("WA! Answer too long!");
-                    return;
-                }
+                l = l.trim(); l2 = l2.trim();
 
-                if ( c != c2 ) {
-                    System.out.println("Difference at " + (char)(c) + " is " + (char)(c2) );
-                    System.out.println("Wrong Answer!");
-                    return;
-                }
+                if ( !l.equals(l2) ) { pr("Wrong Answer!"); return; }
 
             }
 
-            if ( jin.available() > 0 ) {
-                System.out.println("WA! Answer incomplete!");
-                return;
-            }
+            if ( ( l2 = br.readLine() ) != null ) { pr("Wrong Answer!"); return; }
 
-            System.out.println("Accepted!");
+            pr("Accepted!");
 
         }finally {
             if (in != null) in.close();
             if (jin != null) jin.close();
         }
+    }
+
+    private boolean filler(int x) {
+        if (x == 10 || x == 32 || x == 13) return true; // is it a space or a new line
+        return false;
     }
 
     private static void pr(String x) {
@@ -103,14 +101,13 @@ public class Checker {
         }
     }
 
-
     public static void main(String []args) throws IOException, InterruptedException {
 
         Checker ch = new Checker(); // gets instance of checker class
 
         // using sync for the wait command
         synchronized ( ch ) {
-            ch.caller(); // begging grading
+            ch.caller(); // begin grading
         }
 
         System.out.println("Done!"); // YAY :D
