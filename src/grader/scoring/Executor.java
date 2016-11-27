@@ -3,6 +3,9 @@ package grader.scoring;
 import grader.models.ProblemModel;
 import grader.models.SubTaskModel;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +13,32 @@ import java.util.List;
  * Created by Basim on 27/11/2016.
  */
 public class Executor {
+
+
+    private static boolean compareResult(Reader programOutput, Reader expectedOutput) throws IOException {
+        BufferedReader programReader = new BufferedReader(programOutput);
+        BufferedReader expectedReader = new BufferedReader(expectedOutput);
+
+        boolean same = true;
+
+        while (programReader.ready() && expectedReader.ready()) {
+            String out = programReader.readLine().trim();
+            String expected = expectedReader.readLine().trim();
+            if (!out.equals(expected)) {
+                same = false;
+                break;
+            }
+        }
+
+        if (same && (programReader.ready() || expectedReader.ready()) )  {
+            same = false;
+        }
+
+        programReader.close();
+        expectedReader.close();
+
+        return same;
+    }
 
     /**
      * Computes the result of running the program on the
@@ -19,25 +48,57 @@ public class Executor {
      * @param exeFile The file containing the executable to run
      * @return The result: TLE, WA, AC or MLE
      */
-    private static ExecutionResult gradeSubTask(SubTaskModel subTask, String exeFile) {
+    private static List<ExecutionResult> gradeSubTask(SubTaskModel subTask, String exeFile) throws IOException, InterruptedException {
 
-        // TODO: Complete grading of sub task
+        Runtime rt = Runtime.getRuntime();
+        List<ExecutionResult> results = new ArrayList<>();
 
-        return ExecutionResult.AC;
+        for (int i = 0; i < subTask.inputFiles.size(); i++) {
+
+            Process pr = rt.exec(exeFile);
+
+            byte[] inputBytes = Files.readAllBytes(Paths.get(subTask.inputFiles.get(i)));
+            pr.getOutputStream().write(inputBytes);
+
+            Thread.sleep(subTask.timeLimit);
+
+            if (pr.isAlive()) {
+                pr.destroy();
+                results.add(ExecutionResult.TLE);
+
+            } else if (pr.exitValue() != 0) {
+
+                results.add(ExecutionResult.RTE);
+            } else {
+
+                if (compareResult(new InputStreamReader(pr.getInputStream()), new FileReader(subTask.outputFiles.get(i)))) {
+                    results.add(ExecutionResult.AC);
+                } else {
+                    results.add(ExecutionResult.WA);
+                }
+            }
+        }
+
+        return results;
     }
 
     /**
      * Compile the given C/C++ source code and return the
      * exe file path
      *
-     * @param programFile The program to compile
+     * @param programFileName The program to compile
      * @return The exe file or the empty string "" in case of compile error
      */
-    private static String compileProgram(String programFile) {
+    private static String compileProgram(String programFileName) throws IOException, InterruptedException {
 
-        // TODO: Complete compiliation
+        String exeFile = "assets/temp.exe";
+        Runtime rt = Runtime.getRuntime();
+        String compileCommand = "g++ " + programFileName + " -o " + exeFile;
 
-        return ""; // Signifies compile error
+        Process pr = rt.exec(compileCommand); // compile code into exe
+        pr.waitFor();
+
+        return (pr.exitValue() == 0) ? exeFile : "";
     }
 
     /**
@@ -48,7 +109,7 @@ public class Executor {
      * @param programFile
      * @return The list of execution results or NULL in-case of compile error
      */
-    public static List<ExecutionResult> gradeProgram(ProblemModel problem, String programFile) {
+    public static List<ExecutionResult> gradeProgram(ProblemModel problem, String programFile) throws IOException, InterruptedException {
 
         String exeFile = compileProgram(programFile);
 
@@ -61,7 +122,7 @@ public class Executor {
 
         // Grade each sub-task by calling the function above
         for (SubTaskModel subTask: problem.subTasks) {
-            results.add(gradeSubTask(subTask, exeFile));
+            results.addAll(gradeSubTask(subTask, exeFile));
         }
 
         return results;

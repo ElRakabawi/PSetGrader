@@ -5,6 +5,7 @@ import grader.models.ProblemModel;
 import grader.models.SubTaskModel;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,20 +33,17 @@ public class ExecutorCode {
         String userOutput = "output.txt"; // for testing
         ExecutionResult er;
 
-        synchronized ( ch ) {
+        for (String input : subTask.inputFiles) {
+            judgeOutput = subTask.outputFiles.get(outIndex++);
 
-            for (String input : subTask.inputFiles) {
-                judgeOutput = subTask.outputFiles.get(outIndex++);
+            er = ch.execute(exeFile);
 
-                er = ch.execute(exeFile);
+            if (er != er.None) return er;
 
-                if (er != er.None) return er;
+            er = ch.compare(userOutput, judgeOutput);
 
-                er = ch.compare(userOutput, judgeOutput);
+            if ( er != ExecutionResult.AC ) return  er;
 
-                if ( er != ExecutionResult.AC ) return  er;
-
-            }
         }
 
         return ExecutionResult.AC;
@@ -72,16 +70,12 @@ public class ExecutorCode {
         Checker ch = new Checker();
         String exeFile = "";
 
-        synchronized ( ch ) {
-
-            if (ch.compile(programFile) == 0) {
-                ch.pr("Compilation Successful!"); // optional
-                exeFile = "assets/" + programFile + ".exe";
-            } else {
-                ch.pr("Compilation Error!");
-                return null;
-            }
-
+        if (ch.compile(programFile) == 0) {
+            ch.pr("Compilation Successful!"); // optional
+            exeFile = "assets/" + programFile + ".exe";
+        } else {
+            ch.pr("Compilation Error!");
+            return null;
         }
 
         List<ExecutionResult> results = new ArrayList<>();
