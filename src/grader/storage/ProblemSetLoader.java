@@ -71,8 +71,8 @@ public class ProblemSetLoader {
         FileFilter txtFilter = pathname -> pathname.getName().endsWith(".txt");
 
         // Load all files, filtering currently allows only text files to prevent config files getting in the way
-        for (File input: inputDir.listFiles(txtFilter)) subTask.inputFiles.add(input.getName());
-        for (File output: outputDir.listFiles(txtFilter)) subTask.outputFiles.add(output.getName());
+        for (File input: inputDir.listFiles(txtFilter)) subTask.inputFiles.add(input.getPath());
+        for (File output: outputDir.listFiles(txtFilter)) subTask.outputFiles.add(output.getPath());
 
         Collections.sort(subTask.inputFiles);
         Collections.sort(subTask.outputFiles);

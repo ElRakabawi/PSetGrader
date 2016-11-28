@@ -8,5 +8,7 @@ public enum ExecutionResult {
     WA,     // Wrong answer
     TLE,    // Time limit exceeded
     MLE,    // Memory limit exceeded
-    RTE     // Run-time error
+    RTE,     // Run-time error
+
+    None
 }

@@ -15,21 +15,34 @@ import java.util.List;
 public class Executor {
 
 
-    private static boolean compareResult(Reader programOutput, Reader expectedOutput) throws IOException {
+    /**
+     * Compare whether the two streams produce identical results
+     *
+     * @param programOutput The stream for the program
+     * @param expectedOutput The stream for the expected output
+     * @return
+     * @throws IOException
+     */
+    protected static boolean compareResult(Reader programOutput, Reader expectedOutput) throws IOException {
         BufferedReader programReader = new BufferedReader(programOutput);
         BufferedReader expectedReader = new BufferedReader(expectedOutput);
 
         boolean same = true;
 
+        // While both have characters read lines and compare for equality
         while (programReader.ready() && expectedReader.ready()) {
+
+            // Trim leading and trailing whitespace
             String out = programReader.readLine().trim();
             String expected = expectedReader.readLine().trim();
+
             if (!out.equals(expected)) {
                 same = false;
                 break;
             }
         }
 
+        // If either stream has more values left then set it to false
         if (same && (programReader.ready() || expectedReader.ready()) )  {
             same = false;
         }
@@ -48,7 +61,7 @@ public class Executor {
      * @param exeFile The file containing the executable to run
      * @return The result: TLE, WA, AC or MLE
      */
-    private static List<ExecutionResult> gradeSubTask(SubTaskModel subTask, String exeFile) throws IOException, InterruptedException {
+    protected static List<ExecutionResult> gradeSubTask(SubTaskModel subTask, String exeFile) throws IOException, InterruptedException {
 
         Runtime rt = Runtime.getRuntime();
         List<ExecutionResult> results = new ArrayList<>();
@@ -58,7 +71,10 @@ public class Executor {
             Process pr = rt.exec(exeFile);
 
             byte[] inputBytes = Files.readAllBytes(Paths.get(subTask.inputFiles.get(i)));
+
             pr.getOutputStream().write(inputBytes);
+            pr.getOutputStream().write('\n');
+            pr.getOutputStream().flush();
 
             Thread.sleep(subTask.timeLimit);
 
@@ -89,7 +105,7 @@ public class Executor {
      * @param programFileName The program to compile
      * @return The exe file or the empty string "" in case of compile error
      */
-    private static String compileProgram(String programFileName) throws IOException, InterruptedException {
+    protected static String compileProgram(String programFileName) throws IOException, InterruptedException {
 
         String exeFile = "assets/temp.exe";
         Runtime rt = Runtime.getRuntime();

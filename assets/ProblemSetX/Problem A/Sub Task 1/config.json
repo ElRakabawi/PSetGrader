@@ -5,6 +5,6 @@
     "Basim",
     "Ahmed"
   ],
-  "time-limit": "1000",
-  "memory-limit": "128"
+  "time-limit": 1000,
+  "memory-limit": 128
 }
