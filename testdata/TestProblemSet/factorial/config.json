@@ -1,0 +1,14 @@
+{
+  "name": "factorial",
+  "description": "Expects a program to take a single integer n and output n! .",
+  "authors": [ "Basim" ],
+
+  "sub-tasks": [
+    {
+      "memory-limit": 100,
+      "time-limit": 500,
+      "input": [ "input" ],
+      "output": [ "output" ]
+    }
+  ]
+}

@@ -129,10 +129,8 @@ public class Executor {
 
         String exeFile = compileProgram(programFile);
 
-        // Check for compile error
-        if (exeFile == "") {
-            return null; // Signify that there was a compile error
-        }
+        // Check for compile error, if so return with error
+        if (exeFile == "") return null;
 
         List<ExecutionResult> results = new ArrayList<>();
 
@@ -140,6 +138,9 @@ public class Executor {
         for (SubTaskModel subTask: problem.subTasks) {
             results.addAll(gradeSubTask(subTask, exeFile));
         }
+
+        // Cleanup by deleting the temporary exe file
+        Files.delete(Paths.get(exeFile));
 
         return results;
     }

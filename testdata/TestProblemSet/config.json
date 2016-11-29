@@ -1,0 +1,6 @@
+{
+  "name": "TestProblemSet",
+  "description": "A test problem set",
+  "authors": [ "Basim", "Ahmed" ],
+  "problems": [ "factorial" ]
+}

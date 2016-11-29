@@ -7,12 +7,14 @@ import grader.models.ProblemModel;
 import grader.models.ProblemSetModel;
 import grader.models.SubTaskModel;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  *
@@ -35,7 +37,7 @@ public class ProblemSetLoader {
      * @return The parsed JSONObject for the file given
      * @throws FileNotFoundException If the file is invalid
      */
-    private static JSONDocument getJSONObject(String fileName) throws FileNotFoundException {
+    protected static JSONDocument getJSONObject(String fileName) throws FileNotFoundException {
         JSONReader reader = new JSONStreamReaderImpl(new FileReader(fileName));
         JSONDocument doc = reader.build();
 
@@ -44,38 +46,68 @@ public class ProblemSetLoader {
     }
 
     /**
+     * Takes an array of relative directories and files and
+     * converts, in order, to all files contained amongst them
      *
-     * Load a sub-task from the specified directory
+     * @param parentDir The directory that the paths are relative to
+     * @param relativePaths All files/directories to be transformed
+     * @return The list of all absolute file paths
+     * @throws IOException
+     */
+    private static List<String> getAbsolutePaths(String parentDir, Stream<String> relativePaths) throws IOException {
+
+        List<String> absolutePaths = new ArrayList<>();
+
+        relativePaths.forEach(pathName -> {
+            Path path = Paths.get(parentDir, pathName);
+
+            // Check if config.json specified a directory or a file
+            if (Files.isDirectory(path)) {
+
+                try {
+
+                    // Get files in this directory
+                    Stream<String> innerFiles = Files.list(path)
+                            // Filter out system and hidden files
+                            .filter(f -> !f.toFile().isHidden() && !f.startsWith("."))
+                            // Store all the file names in sorted order
+                            .map(f -> f.getFileName().toString()).sorted();
+
+                    // Recursively get all test cases in the sub-directories
+                    absolutePaths.addAll(getAbsolutePaths(path.toString(), innerFiles));
+
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
+
+            // Simply add the file if it is just a file
+            else {
+                absolutePaths.add(path.toString());
+            }
+        });
+
+        return absolutePaths;
+    }
+
+    /**
      *
-     * @param dirName The directory to load from
+     * Load a sub-task from the specified JSON document descriptor
+     *
+     * @param problemDir The directory of the problem to load from
+     * @param configDoc The sub-task JSON descriptor to load from
      * @return The SubTaskModel for the directory
      * @throws FileNotFoundException If the config file wasn't found
      */
-    public static SubTaskModel loadSubTask(String dirName) throws FileNotFoundException {
+    public static SubTaskModel loadSubTask(String problemDir, JSONDocument configDoc) throws IOException {
 
         SubTaskModel subTask = new SubTaskModel();
-        JSONDocument configDoc = getJSONObject(dirName + File.separator + MAIN_CONFIG);
 
         subTask.memoryLimit = configDoc.getNumber("memory-limit").intValue();
         subTask.timeLimit = configDoc.getNumber("time-limit").intValue();
 
-        subTask.inputFiles = new ArrayList<>();
-        subTask.outputFiles = new ArrayList<>();
-
-        File inputDir = new File(dirName + File.separator + "input");
-        File outputDir = new File(dirName + File.separator + "output");
-
-        if (!inputDir.exists() || !outputDir.exists())
-            throw new FileNotFoundException("Test data directories not present");
-
-        FileFilter txtFilter = pathname -> pathname.getName().endsWith(".txt");
-
-        // Load all files, filtering currently allows only text files to prevent config files getting in the way
-        for (File input: inputDir.listFiles(txtFilter)) subTask.inputFiles.add(input.getPath());
-        for (File output: outputDir.listFiles(txtFilter)) subTask.outputFiles.add(output.getPath());
-
-        Collections.sort(subTask.inputFiles);
-        Collections.sort(subTask.outputFiles);
+        subTask.inputFiles = getAbsolutePaths(problemDir, configDoc.getList("input").stream().map(s -> (String)s));
+        subTask.outputFiles = getAbsolutePaths(problemDir, configDoc.getList("output").stream().map(s -> (String)s));
 
         return subTask;
     }
@@ -87,7 +119,7 @@ public class ProblemSetLoader {
      * @return
      * @throws FileNotFoundException
      */
-    public static ProblemModel loadProblem(String dirName) throws FileNotFoundException{
+    public static ProblemModel loadProblem(String dirName) throws IOException {
 
         ProblemModel problem = new ProblemModel();
         JSONDocument configDoc = getJSONObject(dirName + File.separator + MAIN_CONFIG);
@@ -95,16 +127,12 @@ public class ProblemSetLoader {
         // Extract properties from the config file
         problem.name = configDoc.getString("name");
         problem.description = configDoc.getString("description");
+        problem.authors = configDoc.getList("authors").stream().map(a -> (String) a).collect(Collectors.toList());
 
-        problem.authors = new ArrayList<>();
         problem.subTasks = new ArrayList<>();
-
-        for (Object author: configDoc.getList("authors")) problem.authors.add((String) author);
-
-        // Iterate over each sub-task specified and load it's sub-directory
         for (Object object: configDoc.getList("sub-tasks")) {
-            String subTaskName = (String)object;
-            problem.subTasks.add(loadSubTask(dirName + File.separator + subTaskName));
+            JSONDocument subTask = (JSONDocument) object;
+            problem.subTasks.add(loadSubTask(dirName, subTask));
         }
 
         return problem;
@@ -117,7 +145,7 @@ public class ProblemSetLoader {
      * @return
      * @throws FileNotFoundException
      */
-    public static ProblemSetModel loadProblemSet(String dirName) throws FileNotFoundException {
+    public static ProblemSetModel loadProblemSet(String dirName) throws IOException {
 
         ProblemSetModel problemSet = new ProblemSetModel();
 
@@ -126,12 +154,9 @@ public class ProblemSetLoader {
         // Extract config properties
         problemSet.name = configDoc.getString("name");
         problemSet.description = configDoc.getString("description");
+        problemSet.authors = configDoc.getList("authors").stream().map(a -> (String) a).collect(Collectors.toList());
+
         problemSet.problems = new ArrayList<>();
-        problemSet.authors = new ArrayList<>();
-
-        for (Object author: configDoc.getList("authors")) problemSet.authors.add((String) author);
-
-        // Iterate over each specified problem and parse the problems from their own directories
         for (Object object: configDoc.getList("problems")) {
             String problemName = (String)object;
             problemSet.problems.add(loadProblem(dirName + File.separator + problemName));
