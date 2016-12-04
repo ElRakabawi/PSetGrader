@@ -1,13 +1,16 @@
 package grader.scoring;
 
+import com.jezhumble.javasysmon.JavaSysMon;
+import com.jezhumble.javasysmon.OsProcess;
+import com.jezhumble.javasysmon.ProcessInfo;
+import com.jezhumble.javasysmon.ProcessVisitor;
 import grader.models.ProblemModel;
 import grader.models.SubTaskModel;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Basim on 27/11/2016.
@@ -63,20 +66,41 @@ public class Executor {
      */
     protected static List<ExecutionResult> gradeSubTask(SubTaskModel subTask, String exeFile) throws IOException, InterruptedException {
 
+
+        JavaSysMon mon = new JavaSysMon();
+        Set<OsProcess> before = new HashSet<>(), after  = new HashSet<>();
+
+        ProcessVisitor beforeVisitor = (osProcess, i) -> { before.add(osProcess); return false; };
+        ProcessVisitor afterVisitor = (osProcess, i) -> { after.add(osProcess); return false; };
+
         Runtime rt = Runtime.getRuntime();
         List<ExecutionResult> results = new ArrayList<>();
 
         for (int i = 0; i < subTask.inputFiles.size(); i++) {
 
-            Process pr = rt.exec(exeFile);
-
             byte[] inputBytes = Files.readAllBytes(Paths.get(subTask.inputFiles.get(i)));
+            before.clear();
+            after.clear();
+
+            mon.visitProcessTree(mon.currentPid(), beforeVisitor);
+            Process pr = rt.exec(exeFile);
+            mon.visitProcessTree(mon.currentPid(), afterVisitor);
+
+            after.removeAll(before);
+            OsProcess process = after.stream().filter(p -> p.processInfo().getName().compareToIgnoreCase("java") == 0).findFirst().get();
+            ProcessInfo info = process.processInfo();
+
+            System.out.println();
+            System.out.println(info.getName());
+            System.out.println(info.getPid());
+            System.out.println(info.getParentPid());
+            System.out.println(info.getResidentBytes() / 1048576.0);
 
             pr.getOutputStream().write(inputBytes);
             pr.getOutputStream().write('\n');
             pr.getOutputStream().flush();
 
-            Thread.sleep(subTask.timeLimit);
+            Thread.sleep(50);
 
             if (pr.isAlive()) {
                 pr.destroy();

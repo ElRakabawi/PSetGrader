@@ -1,5 +1,8 @@
 package grader;
 
+import grader.models.ProblemModel;
+import grader.scoring.Executor;
+import grader.storage.ProblemSetLoader;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -21,5 +24,9 @@ public class Main extends Application {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         //launch(args);
+
+        ProblemModel problem = ProblemSetLoader.loadProblem("testdata/TestProblemSet/factorial");
+
+        Executor.gradeProgram(problem, "testdata/fact.cpp");
     }
 }
